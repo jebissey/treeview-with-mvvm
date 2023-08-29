@@ -1,15 +1,10 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
-using System.Windows;
-using Cinch;
+﻿using System.Windows;
 
-namespace TreeViewWithMVVM
+namespace TreeViewWithMVVM;
+
+public partial class App : Application
 {
-    public partial class App : Application
+    public App()
     {
-        public App()
-        {
-            CinchBootStrapper.Initialise(new List<Assembly> { typeof(App).Assembly });
-        }
     }
 }

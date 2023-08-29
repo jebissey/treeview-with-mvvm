@@ -1,77 +1,48 @@
-﻿using System.Collections.ObjectModel;
-using System.ComponentModel;
-using System.ComponentModel.Composition;
-using Cinch;
-using MEFedMVVM.ViewModelLocator;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Collections.ObjectModel;
 
-namespace TreeViewWithMVVM
+namespace TreeViewWithMVVM;
+
+public partial class MainWindowViewModel : ObservableObject
 {
-    [ExportViewModel("MainWindowViewModel")]
-    [PartCreationPolicy(CreationPolicy.NonShared)]
-    public class MainWindowViewModel : ViewModelBase
+    #region Relay command
+    [RelayCommand]
+    private void ExpandAll()
     {
-        private readonly IViewAwareStatus _viewAwareStatusService;
+        TreeModel.ToggleExpanded(ItemsSource, true);
+    }
 
-        public SimpleCommand<object, EventToCommandArgs> ExpandAllCommand { get; private set; }
+    [RelayCommand]
+    private void CollapseAll()
+    {
+        TreeModel.ToggleExpanded(ItemsSource, false);
+    }
 
-        public SimpleCommand<object, EventToCommandArgs> CollapseAllCommand { get; private set; }
+    [RelayCommand]
+    private void GetSelected()
+    {
+        TreeModel<System.Guid> selectedNode = TreeModel.GetSelectedNode(ItemsSource);
+        SelectedDisplayText = selectedNode != null ? selectedNode.DisplayText : "none selected";
+    }
+    #endregion
 
-        public SimpleCommand<object, EventToCommandArgs> GetSelectedCommand { get; private set; }
+    public MainWindowViewModel()
+    {
+        ItemsSource = DataService.GetData();
+    }
 
-        [ImportingConstructor]
-        public MainWindowViewModel(IViewAwareStatus viewAwareStatusService)
-        {
-            ExpandAllCommand = new SimpleCommand<object, EventToCommandArgs>((commandParameter) =>
-            {
-                TreeModel.ToggleExpanded(this.ItemsSource, true);
-            });
+    private ObservableCollection<TreeModel> itemsSource = null;
+    public ObservableCollection<TreeModel> ItemsSource
+    {
+        get => itemsSource;
+        private set => SetProperty(ref itemsSource, value);
+    }
 
-            CollapseAllCommand = new SimpleCommand<object, EventToCommandArgs>((commandParameter) =>
-            {
-                TreeModel.ToggleExpanded(this.ItemsSource, false);
-            });
-
-            GetSelectedCommand = new SimpleCommand<object, EventToCommandArgs>((commandParameter) =>
-            {
-                var selectedNode = TreeModel.GetSelectedNode(this.ItemsSource);
-                this.SelectedDisplayText = selectedNode != null ? selectedNode.DisplayText : "none selected";
-            });
-
-            this._viewAwareStatusService = viewAwareStatusService;
-            this._viewAwareStatusService.ViewLoaded += ViewAwareStatusService_ViewLoaded;
-        }
-
-        private void ViewAwareStatusService_ViewLoaded()
-        {
-            this.ItemsSource = DataService.GetData();
-        }
-
-        private ObservableCollection<TreeModel> _itemsSource = null;
-
-        private static PropertyChangedEventArgs _itemsSourceChangeArgs = ObservableHelper.CreateArgs<MainWindowViewModel>(x => x.ItemsSource);
-
-        public ObservableCollection<TreeModel> ItemsSource
-        {
-            get { return this._itemsSource; }
-            private set
-            {
-                this._itemsSource = value;
-                NotifyPropertyChanged(_itemsSourceChangeArgs);
-            }
-        }
-
-        private string _selectedDisplayText;
-
-        private static PropertyChangedEventArgs _selectedDisplayTextChangeArgs = ObservableHelper.CreateArgs<MainWindowViewModel>(x => x.SelectedDisplayText);
-
-        public string SelectedDisplayText
-        {
-            get { return this._selectedDisplayText; }
-            private set
-            {
-                this._selectedDisplayText = value;
-                NotifyPropertyChanged(_selectedDisplayTextChangeArgs);
-            }
-        }
+    private string selectedDisplayText;
+    public string SelectedDisplayText
+    {
+        get => selectedDisplayText;
+        private set => SetProperty(ref selectedDisplayText, value);
     }
 }

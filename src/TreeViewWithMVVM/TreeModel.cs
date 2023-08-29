@@ -1,139 +1,99 @@
-﻿using System;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 
 namespace TreeViewWithMVVM
 {
-    public abstract class TreeModel<T1> : INotifyPropertyChanged
+    public abstract class TreeModel<T> : ObservableObject
     {
         #region ctor
-
         public TreeModel()
         {
-            this.IsSelected = false;
-            _children = new ObservableCollection<TreeModel<T1>>();
+            IsSelected = false;
+            children = new ObservableCollection<TreeModel<T>>();
         }
-
-        #endregion ctor
-
-        #region fields
-
-        private TreeModel<T1> _parent;
-        protected ObservableCollection<TreeModel<T1>> _children;
-        private T1 _selectedValue;
-        private string _displayText;
-        private bool _isSelected;
-        private bool _isExpanded;
-
-        #endregion fields
+        #endregion
 
         #region properties
-
-        public TreeModel<T1> Parent
+        private TreeModel<T> parent;
+        public TreeModel<T> Parent
         {
-            get { return _parent; }
-            set
-            {
-                _parent = value;
-                NotifyPropertyChanged("Parent");
-            }
+            get => parent;
+            set => SetProperty(ref parent, value);
         }
 
-        public IEnumerable<TreeModel<T1>> Children
+        protected ObservableCollection<TreeModel<T>> children;
+        public IEnumerable<TreeModel<T>> Children => children;
+
+        private T selectedValue;
+        public T SelectedValue
         {
-            get { return _children; }
+            get => selectedValue;
+            set => SetProperty(ref selectedValue, value);
         }
 
-        public T1 SelectedValue
-        {
-            get { return _selectedValue; }
-            set
-            {
-                _selectedValue = value;
-                NotifyPropertyChanged("SelectedValue");
-            }
-        }
-
+        private string displayText;
         public string DisplayText
         {
-            get { return _displayText; }
-            set
-            {
-                _displayText = value;
-                NotifyPropertyChanged("DisplayText");
-            }
+            get => displayText;
+            set => SetProperty(ref displayText, value);
         }
 
+        private bool isSelected;
         public bool IsSelected
         {
-            get { return _isSelected; }
-            set
-            {
-                _isSelected = value;
-                NotifyPropertyChanged("IsSelected");
-            }
+            get => isSelected;
+            set => SetProperty(ref isSelected, value);
         }
 
+        private bool isExpanded;
         public bool IsExpanded
         {
-            get { return _isExpanded; }
-            set
-            {
-                _isExpanded = value;
-                NotifyPropertyChanged("IsExpanded");
-            }
+            get => isExpanded;
+            set => SetProperty(ref isExpanded, value);
         }
-
-        #endregion properties
+        #endregion
 
         #region methods
-
         public override string ToString()
         {
-            return this.DisplayText;
+            return DisplayText;
         }
 
-        public void AddChild(TreeModel<T1> child)
+        public void AddChild(TreeModel<T> child)
         {
             child.Parent = this;
-            this._children.Add(child);
+            children.Add(child);
         }
-
-        #endregion methods
+        #endregion
 
         #region static methods
-
-        public static TreeModel<T1> GetNodeById(T1 id, IEnumerable<TreeModel<T1>> nodes)
+        public static TreeModel<T> GetNodeById(T id, IEnumerable<TreeModel<T>> nodes)
         {
             foreach (var node in nodes)
             {
-                if (node.SelectedValue.Equals(id))
-                    return node;
+                if (node.SelectedValue.Equals(id)) return node;
 
-                var foundChild = GetNodeById(id, node.Children);
-                if (foundChild != null)
-                    return foundChild;
+                TreeModel<T> foundChild = GetNodeById(id, node.Children);
+                if (foundChild != null) return foundChild;
             }
             return null;
         }
 
-        public static TreeModel<T1> GetSelectedNode(IEnumerable<TreeModel<T1>> nodes)
+        public static TreeModel<T> GetSelectedNode(IEnumerable<TreeModel<T>> nodes)
         {
             foreach (var node in nodes)
             {
-                if (node.IsSelected)
-                    return node;
+                if (node.IsSelected) return node;
 
-                var selectedChild = GetSelectedNode(node.Children);
-                if (selectedChild != null)
-                    return selectedChild;
+                TreeModel<T> selectedChild = GetSelectedNode(node.Children);
+                if (selectedChild != null) return selectedChild;
             }
-
             return null;
         }
 
-        public static void ExpandParentNodes(TreeModel<T1> node)
+        public static void ExpandParentNodes(TreeModel<T> node)
         {
             if (node.Parent != null)
             {
@@ -142,7 +102,7 @@ namespace TreeViewWithMVVM
             }
         }
 
-        public static void ToggleExpanded(IEnumerable<TreeModel<T1>> nodes, bool isExpanded)
+        public static void ToggleExpanded(IEnumerable<TreeModel<T>> nodes, bool isExpanded)
         {
             foreach (var node in nodes)
             {
@@ -150,24 +110,7 @@ namespace TreeViewWithMVVM
                 ToggleExpanded(node.Children, isExpanded);
             }
         }
-
-        #endregion static methods
-
-        #region INotifyPropertyChanged implementation
-
-        public event PropertyChangedEventHandler PropertyChanged;
-
-        protected void NotifyPropertyChanged(String propertyName)
-        {
-            PropertyChangedEventHandler handler = PropertyChanged;
-
-            if (handler != null)
-            {
-                handler(this, new PropertyChangedEventArgs(propertyName));
-            }
-        }
-
-        #endregion INotifyPropertyChanged implementation
+        #endregion
     }
 
     public class TreeModel : TreeModel<Guid>
